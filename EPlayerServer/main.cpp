@@ -7,6 +7,7 @@
 #include <sys/socket.h>‘
 #include<sys/stat.h>
 #include<fcntl.h>
+#include<signal.h>
 
 
 class CFunctionBase
@@ -154,6 +155,37 @@ public:
 		fd = *(int*)CMSG_DATA(cmsg); //获取文件描述符
 		return 0;
 	}
+	/*守护进程通常会关闭标准输入输出（stdin、stdout、stderr），原因如下：
+		1.	避免占用终端：
+		•	守护进程在后台运行，不需要与用户交互，因此不需要标准输入输出。
+		•	关闭标准输入输出可以避免占用终端资源。
+		2.	防止意外输出：
+		使用 umask 清除文件遮蔽位
+		umask 是一个进程级别的设置，用于控制新创建文件的默认权限。守护进程通常会将 umask 设置为 0，原因如下：
+		1.	确保文件权限正确：
+		•	守护进程可能需要创建文件或目录，设置 umask 为 0 可以确保新创建的文件或目录具有预期的权限。
+		•	这可以避免由于默认 umask 设置导致的权限问题。
+		处理 SIGCHLD 信号
+		SIGCHLD 信号是在子进程终止时发送给父进程的信号。守护进程通常需要处理 SIGCHLD 信号，原因如下：
+		1.	避免僵尸进程：
+		•	当子进程终止时，如果父进程没有处理 SIGCHLD 信号，子进程会变成僵尸进程，占用系统资源。
+		•	通过处理 SIGCHLD 信号，父进程可以调用 wait 或 waitpid 函数回收子进程的资源，避免僵尸进程的产生。*/
+	static int SwitchDeamon() {
+		pid_t ret = fork();
+		if (ret == -1)return -1;
+		if (ret > 0)exit(0);//主进程到此为止
+		//子进程内容如下
+		ret = setsid();
+		if (ret == -1)return -2;//失败，则返回
+		ret = fork();
+		if (ret == -1)return -3;
+		if (ret > 0)exit(0);//子进程到此为止
+		//孙进程的内容如下，进入守护状态
+		for (int i = 0; i < 3; i++) close(i);//关闭标准输入，输出，错误输出
+		umask(0); //设置文件权限掩码,清除文件遮蔽位
+		signal(SIGCHLD, SIG_IGN);//忽略SIGCHLD信号
+		return 0;
+	}
 
 
 private:
@@ -173,45 +205,45 @@ int CreateClientServer(CProcess* proc)
 {
 	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
 	int fd = -1;
-	int ret = proc->RecvFD(fd);
-	printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
-	printf("%s(%d):<%s> fd=%d\n", __FILE__, __LINE__, __FUNCTION__, fd);
-	sleep(1);
+	int ret = proc->RecvFD(fd); //接收文件描述符
+	printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret); //打印返回值
+	printf("%s(%d):<%s> fd=%d\n", __FILE__, __LINE__, __FUNCTION__, fd); //打印文件描述符
+	sleep(1); //睡眠1秒,等待主进程写文件
 	char buf[10] = "";
-	lseek(fd, 0, SEEK_SET);
-	read(fd, buf, sizeof(buf));
-	printf("%s(%d):<%s> buf=%s\n", __FILE__, __LINE__, __FUNCTION__, buf);
+	lseek(fd, 0, SEEK_SET); //文件指针移动到文件开头
+	read(fd, buf, sizeof(buf)); //读取文件内容
+	printf("%s(%d):<%s> buf=%s\n", __FILE__, __LINE__, __FUNCTION__, buf); //打印文件内容
 	close(fd);
 	return 0;
 }
 
 int main()
 {
+	//CProcess::SwitchDeamon(); //创建守护进程
 	CProcess proclog, proccliets; //创建两个进程对象 
-	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
+	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid()); //打印进程id
 	proclog.SetEntryFunction(CreateLogServer, &proclog); //设置进程的入口函数
 	int ret = proclog.CreateSubProcess(); //创建日志子进程
 	if (ret != 0) {
-		printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
+		printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid()); //打印进程id
 		return -1;
 	}
-	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
+	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid()); //打印进程id
 	proccliets.SetEntryFunction(CreateClientServer, &proccliets); //设置进程的入口函数
 	ret = proccliets.CreateSubProcess(); //创建子进程，客户端进程
 	if (ret != 0) {
-		printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
+		printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid()); //打印进程id
 		return -2;
 	}
-	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
-	usleep(100 * 000);
-	int fd = open("./test.txt", O_RDWR | O_CREAT | O_APPEND);
-	printf("%s(%d):<%s> fd=%d\n", __FILE__, __LINE__, __FUNCTION__, fd);
+	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid()); //打印进程id
+	usleep(100 * 000); //睡眠100毫秒，等待子进程创建完成，usleep是微秒级别的睡眠函数
+	int fd = open("./test.txt", O_RDWR | O_CREAT | O_APPEND); //打开文件
+	printf("%s(%d):<%s> fd=%d\n", __FILE__, __LINE__, __FUNCTION__, fd); //打印文件描述符
 	if (fd == -1)return -3;
-	ret = procclients.SendFD(fd);
-	printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
-	if (ret != 0)printf("errno:%d msg:%s\n", errno, strerror(errno));
-	write(fd, "edoyun", 6);
+	ret = proccliets.SendFD(fd); //发送文件描述符
+	printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret); //打印返回值
+	if (ret != 0)printf("errno:%d msg:%s\n", errno, strerror(errno)); //打印错误信息
+	write(fd, "edoyun", 6); //写文件
 	close(fd);
-	return 0;
 	return 0;
 }
