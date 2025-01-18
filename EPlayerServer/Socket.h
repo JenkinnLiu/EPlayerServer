@@ -12,6 +12,8 @@ class Buffer :public std::string //数据缓冲区类，继承自string
 public:
 	Buffer() :std::string() {} 
 	Buffer(size_t size) :std::string() { resize(size); } //构造函数，将缓冲区大小设置为size
+	Buffer(const std::string& str) :std::string(str) {}
+	Buffer(const char* str) :std::string(str) {}
 	operator char* () { return (char*)c_str(); } //重载类型转换运算符，将Buffer转换为char*
 	operator char* () const { return (char*)c_str(); }
 	operator const char* () const { return c_str(); }
