@@ -30,6 +30,7 @@ LogInfo::LogInfo(
 		m_buf += buf;
 		free(buf);
 	}
+	m_buf += "\n";
 	va_end(ap);
 }
 
@@ -80,7 +81,13 @@ LogInfo::LogInfo(
 		m_buf += buf;//将buf写入m_buf
 		if (0 == ((i + 1) % 16)) {//每16个字节换行
 			m_buf += "\t; ";
-			for (size_t j = i - 15; j <= i; j++) { //循环遍历当前 16 个字节，生成字符表示。
+			char buf[17] = "";
+			memcpy(buf, Data + i - 15, 16);
+			for (int j = 0; j < 16; j++) {
+				if ((buf[j]) < 32 && (buf[j] >= 0)) buf[j] = '.';
+			}
+			m_buf += buf;
+			/*for (size_t j = i - 15; j <= i; j++) { //循环遍历当前 16 个字节，生成字符表示。
 				//如果字符是可打印字符（ASCII 范围 32-126），则追加到 m_buf。
 				if ((Data[j] & 0xFF) > 31 && ((Data[j] & 0xFF) < 0x7F)) {
 					m_buf += Data[i];
@@ -88,7 +95,7 @@ LogInfo::LogInfo(
 				else {
 					m_buf += '.';//否则追加点号作为占位符
 				}
-			}
+			}*/
 			m_buf += "\n";
 		}
 	}
@@ -112,6 +119,7 @@ LogInfo::LogInfo(
 LogInfo::~LogInfo()
 {
 	if (bAuto) {
+		m_buf += "\n";
 		CLoggerServer::Trace(*this);
 	}
 }

@@ -1,10 +1,24 @@
 ﻿#include "Process.h"
-
+#include "Logger.h"
 
 
 int CreateLogServer(CProcess* proc)
 {
-	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
+	//printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid());
+	CLoggerServer server; // 初始化日志服务器
+	int ret = server.Start(); // 启动日志服务器
+	if (ret != 0) {
+		printf("%s(%d):<%s> pid=%d errno:%d msg:%s ret:%d\n",
+			__FILE__, __LINE__, __FUNCTION__, getpid(), errno, strerror(errno), ret);
+	}
+	int fd = 0;
+	while (true) { //循环接收文件描述符
+		ret = proc->RecvFD(fd); 
+		printf("%s(%d):<%s> fd=%d\n", __FILE__, __LINE__, __FUNCTION__, fd);
+		if (fd <= 0)break;
+	}
+	ret = server.Close(); //关闭日志服务器
+	printf("%s(%d):<%s> ret=%d\n", __FILE__, __LINE__, __FUNCTION__, ret);
 	return 0;
 }
 
@@ -24,6 +38,16 @@ int CreateClientServer(CProcess* proc)
 	return 0;
 }
 
+int LogTest()
+{
+	char buffer[] = "hello edoyun! 刘健强";
+	usleep(1000 * 100);
+	TRACEI("here is log %d %c %f %g %s 哈哈 嘻嘻 刘健强测试", 10, 'A', 1.0f, 2.0, buffer);
+	DUMPD((void*)buffer, (size_t)sizeof(buffer));
+	LOGE << 100 << " " << 'S' << " " << 0.12345f << " " << 1.23456789 << " " << buffer << " 易道云编程";
+	return 0;
+}
+
 int main()
 {
 	//CProcess::SwitchDeamon(); //创建守护进程
@@ -35,6 +59,7 @@ int main()
 		printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid()); //打印进程id
 		return -1;
 	}
+	LogTest();
 	printf("%s(%d):<%s> pid=%d\n", __FILE__, __LINE__, __FUNCTION__, getpid()); //打印进程id
 	proccliets.SetEntryFunction(CreateClientServer, &proccliets); //设置进程的入口函数
 	ret = proccliets.CreateSubProcess(); //创建子进程，客户端进程
@@ -52,5 +77,7 @@ int main()
 	if (ret != 0)printf("errno:%d msg:%s\n", errno, strerror(errno)); //打印错误信息
 	write(fd, "edoyun", 6); //写文件
 	close(fd);
+	proclog.SendFD(-1);
+	(void)getchar();
 	return 0;
 }

@@ -138,6 +138,9 @@ public:
 		int type = (m_param.attr & SOCK_ISUDP) ? SOCK_DGRAM : SOCK_STREAM;
 		if (m_socket == -1)
 			m_socket = socket(PF_LOCAL, type, 0);
+		else {
+			m_status = 2;//accept来的套接字，已经处于连接状态
+		}
 		if (m_socket == -1)return -2;
 		int ret = 0;
 		if (m_param.attr & SOCK_ISSERVER) {
@@ -153,7 +156,8 @@ public:
 			ret = fcntl(m_socket, F_SETFL, option);
 			if (ret == -1)return -6;
 		}
-		m_status = 1;
+		if(m_status == 0)
+			m_status = 1;
 		return 0;
 	}
 	//连接 服务器 accept 客户端 connect  对于udp这里可以忽略
