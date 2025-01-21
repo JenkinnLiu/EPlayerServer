@@ -170,8 +170,8 @@ private:
 								Buffer data(1024 * 1024); //创建数据缓冲区
 								int r = pClient->Recv(data); //接收数据
 								if (r <= 0) {
-									delete pClient;
 									mapClients[*pClient] = NULL;
+									delete pClient;
 								}
 								else {
 									WriteLog(data); //写入日志

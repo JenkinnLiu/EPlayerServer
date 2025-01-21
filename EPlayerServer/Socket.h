@@ -23,6 +23,7 @@ enum SockAttr {
 	SOCK_ISSERVER = 1,//是否服务器 1表示是 0表示客户端
 	SOCK_ISNONBLOCK = 2,//是否阻塞 1表示非阻塞 0表示阻塞
 	SOCK_ISUDP = 4,//是否为UDP 1表示udp 0表示tcp
+	SOCK_ISIP = 8;//是否为IP协议 1表示IP协议 0表示本地UNIX域套接字
 };
 
 class CSockParam { //套接字参数类
@@ -104,6 +105,9 @@ public:
 	virtual int Close() {
 		m_status = 3;
 		if (m_socket != -1) {
+			if (m_param.attr & SOCK_ISSERVER && (m_param & SOCK_ISIP) == 0) {
+				unlink(m_param.ip);
+			}
 			int fd = m_socket;
 			m_socket = -1;
 			close(fd);
@@ -136,18 +140,29 @@ public:
 		if (m_status != 0)return -1;
 		m_param = param;
 		int type = (m_param.attr & SOCK_ISUDP) ? SOCK_DGRAM : SOCK_STREAM;
-		if (m_socket == -1)
+		if (m_socket == -1) {
+			if (param.attr & SOCK_ISIP)
+				m_socket = socket(PF_INET, type, 0);//创建一个IP协议的套接字
+			else
+				m_socket = socket(PF_LOCAL, type, 0);//创建一个本地套接字
 			m_socket = socket(PF_LOCAL, type, 0);
+
+		}		
 		else {
 			m_status = 2;//accept来的套接字，已经处于连接状态
 		}
 		if (m_socket == -1)return -2;
 		int ret = 0;
 		if (m_param.attr & SOCK_ISSERVER) {
-			ret = bind(m_socket, m_param.addrun(), sizeof(sockaddr_un));
+			if (m_param.attr & SOCK_ISIP)
+				ret = bind(m_socket, m_param.addrin(), sizeof(sockaddr_in));//绑定IP地址
+			else {
+				ret = bind(m_socket, m_param.addrun(), sizeof(sockaddr_un));//绑定本地套接字
+			}
 			if (ret == -1) return -3;
 			ret = listen(m_socket, 32);
 			if (ret == -1)return -4;
+			
 		}
 		if (m_param.attr & SOCK_ISNONBLOCK) {
 			int option = fcntl(m_socket, F_GETFL); //获取文件状态标志
@@ -167,9 +182,19 @@ public:
 		if (m_param.attr & SOCK_ISSERVER) { //服务器
 			if (pClient == NULL)return -2;
 			CSockParam param;
-			socklen_t len = sizeof(sockaddr_un);
-			int fd = accept(m_socket, param.addrun(), &len);
-			if (fd == -1)return -3;
+			int fd = -1;
+			socklen_t len = 0;
+			if (m_param.attr & SOCK_ISIP) {//IP协议
+				param.attr |= SOCK_ISIP;
+				len = sizeof(sockaddr_in);
+				fd = accept(m_socket, param.addrin(), &len);
+				if (fd == -1)return -3;
+			}
+			else {
+				len = sizeof(sockaddr_un);
+				fd = accept(m_socket, param.addrun(), &len);
+				if (fd == -1)return -3;
+			}
 			*pClient = new CLocalSocket(fd); //创建一个新的客户端
 			if (*pClient == NULL)return -4;
 			ret = (*pClient)->Init(param); //初始化客户端
