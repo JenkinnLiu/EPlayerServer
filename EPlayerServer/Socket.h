@@ -54,7 +54,12 @@ public:
 		port = param.port;
 		attr = param.attr;
 		memcpy(&addr_in, &param.addr_in, sizeof(addr_in));
-		memcpy(&addr_un, &param.addr_un, sizeof(addr_un));
+	}
+	CSockParam(const sockaddr_in* addrin, int attr) {//拷贝构造函数
+		ip = path;
+		addr_un.sun_family = AF_UNIX; //本地套接字写法：AF_UNIX，使用addr_un
+		strcpy(addr_un.sun_path, path);
+		this->attr = attr;
 	}
 public:
 	CSockParam& operator=(const CSockParam& param) {//赋值运算符重载

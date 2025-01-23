@@ -73,7 +73,7 @@ int CServer::ThreadFunc()
 						CSocketBase* pClient = NULL;
 						ret = m_server->Link(&pClient);//连接客户端
 						if (ret != 0)continue;
-						ret = m_process.SendFD(*pClient);//向子进程（业务模块）发送客户端的文件描述符，子进程（业务模块）接收到客户端的文件描述符后，可以与客户端通信
+						ret = m_process.SendSocket(*pClient, *pClient);//向子进程（业务模块）发送客户端的文件描述符，子进程（业务模块）接收到客户端的文件描述符后，可以与客户端通信
 						delete pClient;
 						if (ret != 0) {
 							TRACEE("send client %d failed!", (int)*pClient);

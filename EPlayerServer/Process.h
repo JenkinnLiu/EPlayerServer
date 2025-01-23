@@ -131,6 +131,64 @@ public:
 		fd = *(int*)CMSG_DATA(cmsg); //获取文件描述符
 		return 0;
 	}
+
+	int SendSocket(int fd, const sockaddr_in* addrin) {//主进程完成
+		struct msghdr msg; //消息头，用于传递消息，包括数据和控制信息
+		iovec iov[2]; //iovec是一个结构体，用于描述一个数据缓冲区，包括缓冲区的地址和长度
+		char buf[2][10] = { "edoyun","jueding" };
+		iov[0].iov_base = (void*)addrin; //缓冲区的地址
+		iov[0].iov_len = sizeof(sockaddr_in); //缓冲区的长度
+		iov[1].iov_base = buf[1]; //缓冲区的地址
+		iov[1].iov_len = sizeof(buf[1]); //缓冲区的长度
+		msg.msg_iov = iov; //iov数组的地址，指向一个iovec数组
+		msg.msg_iovlen = 2; //iov数组的长度
+
+		// 下面的数据，才是我们需要传递的。
+		cmsghdr* cmsg = (cmsghdr*)calloc(1, CMSG_LEN(sizeof(int))); //cmsghdr是一个结构体，用于描述控制信息，如文件描述符传递、IP选项等
+		if (cmsg == NULL)return -1;
+		cmsg->cmsg_len = CMSG_LEN(sizeof(int)); //控制信息的长度
+		cmsg->cmsg_level = SOL_SOCKET; //控制信息的协议级别
+		cmsg->cmsg_type = SCM_RIGHTS;	//控制信息的类型
+		*(int*)CMSG_DATA(cmsg) = fd; //控制信息的数据,这里是文件描述符
+		msg.msg_control = cmsg; //控制信息的地址
+		msg.msg_controllen = cmsg->cmsg_len; //控制信息的长度
+
+		ssize_t ret = sendmsg(pipes[1], &msg, 0); //发送消息
+		free(cmsg); //释放控制信息的内存
+		if (ret == -1) {
+			return -2;
+		}
+		return 0;
+	}
+
+	int RecvSocket(int& fd, sockaddr_in* addrin) //子进程完成,接收文件描述符
+	{
+		msghdr msg; //消息头
+		iovec iov[2]; //iovec数组
+		char buf[][10] = { "","" }; //缓冲区
+		iov[0].iov_base = addrin; //缓冲区的地址
+		iov[0].iov_len = sizeof(sockaddr_in);	//缓冲区的长度
+		iov[1].iov_base = buf[1]; //缓冲区的地址
+		iov[1].iov_len = sizeof(buf[1]); //缓冲区的长度
+		msg.msg_iov = iov; //iovec数组的地址
+		msg.msg_iovlen = 2; //iovec数组的长度
+
+		cmsghdr* cmsg = (cmsghdr*)calloc(1, CMSG_LEN(sizeof(int))); //控制信息
+		if (cmsg == NULL)return -1;
+		cmsg->cmsg_len = CMSG_LEN(sizeof(int)); //控制信息的长度
+		cmsg->cmsg_level = SOL_SOCKET; //控制信息的协议级别
+		cmsg->cmsg_type = SCM_RIGHTS; //控制信息的类型
+		msg.msg_control = cmsg; //控制信息的地址
+		msg.msg_controllen = CMSG_LEN(sizeof(int)); //控制信息的长度
+		ssize_t ret = recvmsg(pipes[0], &msg, 0); //接收消息
+		if (ret == -1) {
+			free(cmsg);
+			return -2;
+		}
+		fd = *(int*)CMSG_DATA(cmsg); //获取文件描述符
+		return 0;
+	}
+
 	/*守护进程通常会关闭标准输入输出（stdin、stdout、stderr），原因如下：
 		1.	避免占用终端：
 		•	守护进程在后台运行，不需要与用户交互，因此不需要标准输入输出。

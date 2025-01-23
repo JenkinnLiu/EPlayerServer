@@ -4,11 +4,17 @@
 #include <functional>
 #include <unistd.h>
 #include <sys/types.h>
+
+class CSocketBase;
+class Buffer;
+
 class CFunctionBase
 {
 public:
 	virtual ~CFunctionBase() {}
-	virtual int operator()() = 0;
+	virtual int operator()() { return -1; }
+	virtual int operator()(CSocketBase*) { return -1; }
+	virtual int operator()(CSocketBase*, const Buffer&) { return -1; }
 };
 
 template<typename _FUNCTION_, typename... _ARGS_>
