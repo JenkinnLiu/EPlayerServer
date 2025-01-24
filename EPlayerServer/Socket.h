@@ -10,11 +10,23 @@
 class Buffer :public std::string //数据缓冲区类，继承自string
 {
 public:
-	Buffer() :std::string() {} 
-	Buffer(size_t size) :std::string() { resize(size); } //构造函数，将缓冲区大小设置为size
+	Buffer() :std::string() {}
+	Buffer(size_t size) :std::string() { resize(size); }
 	Buffer(const std::string& str) :std::string(str) {}
 	Buffer(const char* str) :std::string(str) {}
-	operator char* () { return (char*)c_str(); } //重载类型转换运算符，将Buffer转换为char*
+	Buffer(const char* str, size_t length)
+		:std::string() {
+		resize(length);
+		memcpy((char*)c_str(), str, length);
+	}
+	Buffer(const char* begin, const char* end) :std::string() {
+		long int len = end - begin;
+		if (len > 0) {
+			resize(len);
+			memcpy((char*)c_str(), begin, len);
+		}
+	}
+	operator char* () { return (char*)c_str(); }
 	operator char* () const { return (char*)c_str(); }
 	operator const char* () const { return c_str(); }
 };
@@ -127,16 +139,16 @@ protected:
 	CSockParam m_param;
 };
 
-class CLocalSocket
+class CSocket
 	:public CSocketBase
 {
 public:
-	CLocalSocket() :CSocketBase() {}
-	CLocalSocket(int sock) :CSocketBase() {
+	CSocket() :CSocketBase() {}
+	CSocket(int sock) :CSocketBase() {
 		m_socket = sock;
 	}
 	//传递析构操作
-	virtual ~CLocalSocket() {
+	virtual ~CSocket() {
 		Close();
 	}
 public:
@@ -200,7 +212,7 @@ public:
 				fd = accept(m_socket, param.addrun(), &len);
 				if (fd == -1)return -3;
 			}
-			*pClient = new CLocalSocket(fd); //创建一个新的客户端
+			*pClient = new CSocket(fd); //创建一个新的客户端
 			if (*pClient == NULL)return -4;
 			ret = (*pClient)->Init(param); //初始化客户端
 			if (ret != 0) {
