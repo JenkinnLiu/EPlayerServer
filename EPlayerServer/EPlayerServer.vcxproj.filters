@@ -43,5 +43,82 @@
     <Filter Include="sqlite3">
       <UniqueIdentifier>{9e92d4f9-3b0b-4054-a616-50fc20a352ba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="img">
+      <UniqueIdentifier>{16ffb2fd-6226-42a1-b75e-8d27f8a2b798}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\img\image.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-1.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-2.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-3.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-4.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-5.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-6.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-7.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-8.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-9.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-10.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-11.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-12.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-13.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-14.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-15.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-16.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-17.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-18.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-19.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-20.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-21.png">
+      <Filter>img</Filter>
+    </Image>
+    <Image Include="..\img\image-22.png">
+      <Filter>img</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
   </ItemGroup>
 </Project>

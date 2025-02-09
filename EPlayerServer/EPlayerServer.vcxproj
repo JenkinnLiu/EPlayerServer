@@ -111,6 +111,34 @@
     <ClInclude Include="Thread.h" />
     <ClInclude Include="ThreadPool.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\img\image-1.png" />
+    <Image Include="..\img\image-10.png" />
+    <Image Include="..\img\image-11.png" />
+    <Image Include="..\img\image-12.png" />
+    <Image Include="..\img\image-13.png" />
+    <Image Include="..\img\image-14.png" />
+    <Image Include="..\img\image-15.png" />
+    <Image Include="..\img\image-16.png" />
+    <Image Include="..\img\image-17.png" />
+    <Image Include="..\img\image-18.png" />
+    <Image Include="..\img\image-19.png" />
+    <Image Include="..\img\image-2.png" />
+    <Image Include="..\img\image-20.png" />
+    <Image Include="..\img\image-21.png" />
+    <Image Include="..\img\image-22.png" />
+    <Image Include="..\img\image-3.png" />
+    <Image Include="..\img\image-4.png" />
+    <Image Include="..\img\image-5.png" />
+    <Image Include="..\img\image-6.png" />
+    <Image Include="..\img\image-7.png" />
+    <Image Include="..\img\image-8.png" />
+    <Image Include="..\img\image-9.png" />
+    <Image Include="..\img\image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
+  </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
       <LibraryDependencies>pthread;m;dl;</LibraryDependencies>

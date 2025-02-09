@@ -55,34 +55,4 @@ int CServer::Close()
 	return 0;
 }
 
-int CServer::ThreadFunc()
-{
-	int ret = 0;
-	EPEvents events;
-	while ((m_epoll != -1) && (m_server != NULL)) {//服务器运行
-		ssize_t size = m_epoll.WaitEvents(events);//等待事件
-		if (size < 0)break;
-		if (size > 0) {
-			for (ssize_t i = 0; i < size; i++)
-			{
-				if (events[i].events & EPOLLERR) {
-					break;
-				}
-				else if (events[i].events & EPOLLIN) {//服务器接收到客户端的连接
-					if (m_server) {
-						CSocketBase* pClient = NULL;
-						ret = m_server->Link(&pClient);//连接客户端
-						if (ret != 0)continue;
-						ret = m_process.SendSocket(*pClient, *pClient);//向子进程（业务模块）发送客户端的文件描述符，子进程（业务模块）接收到客户端的文件描述符后，可以与客户端通信
-						delete pClient;
-						if (ret != 0) {
-							TRACEE("send client %d failed!", (int)*pClient);
-							continue;
-						}
-					}
-				}
-			}
-		}
-	}
-	return 0;
-}
+ 
